@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Frontend Roadmap Lab</title>
+  <link rel="stylesheet" href="/_shared/site.css" />
+</head>
+<body>
+  <main class="wrap">
+    <h1>Frontend Roadmap Lab</h1>
+    <p class="muted">
+      เรียนตาม <a href="https://roadmap.sh/frontend" target="_blank" rel="noopener">roadmap.sh/frontend</a>:
+      อ่านบทเรียน → เปิดแบบฝึกหัด → แก้โค้ดใน VS Code → รีเฟรช → ดู test มุมขวาล่างเปลี่ยนเป็นสีเขียว
+    </p>
+    <div class="progress" aria-label="ความคืบหน้า"><div id="bar"></div></div>
+    <div id="lessons"></div>
+  </main>
+
+  <script src="/_shared/lessons.js"></script>
+  <script>
+    const read = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+    const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+
+    const list = document.getElementById('lessons');
+    let done = 0;
+
+    LESSONS.forEach((l, i) => {
+      const finished = read('fr:done:' + l.id) === true;
+      if (finished) done++;
+      const el = document.createElement('section');
+      el.className = 'lesson';
+      el.innerHTML = `
+        <header>
+          <span class="num">${String(i + 1).padStart(2, '0')}</span>
+          <h2>${l.title}</h2>
+          <span class="tag">${l.roadmap}</span>
+        </header>
+        <p>${l.desc}</p>
+        <ul>
+          <li><a class="btn" href="/lesson.html?l=${l.id}">📖 อ่านบทเรียน</a></li>
+          ${l.exercises.map((ex) => {
+            if (ex.type === 'node') return `<li>💻 ${ex.name}: <code>${ex.cmd}</code></li>`;
+            const r = read('fr:/' + ex.path);
+            const score = ex.noTest ? '' : r
+              ? `<span class="score ${r.passed === r.total ? 'done' : ''}">${r.passed}/${r.total}</span>`
+              : '<span class="score">ยังไม่ได้ลอง</span>';
+            return `<li>🧪 <a href="/${ex.path}">${ex.name}</a> ${score}</li>`;
+          }).join('')}
+        </ul>
+        <label class="done-check"><input type="checkbox" ${finished ? 'checked' : ''}> เรียนบทนี้จบแล้ว</label>`;
+      el.querySelector('input').addEventListener('change', (e) => {
+        write('fr:done:' + l.id, e.target.checked);
+        location.reload();
+      });
+      list.appendChild(el);
+    });
+    document.getElementById('bar').style.width = (done / LESSONS.length) * 100 + '%';
+  </script>
+</body>
+</html>

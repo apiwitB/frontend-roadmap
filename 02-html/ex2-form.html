@@ -1,0 +1,113 @@
+<!doctype html>
+<!-- ════════════════════════════════════════════════════════════════
+  แบบฝึกหัด 02-2: ฟอร์มสมัครสมาชิก (accessible + validate โดยไม่ใช้ JavaScript)
+  ────────────────────────────────────────────────────────────────
+  สร้างฟอร์มใน <form id="register"> ให้มีช่องดังนี้ (ใช้ name ตามนี้เป๊ะๆ):
+
+   name      ชื่อ-นามสกุล     ต้องกรอก, autocomplete="name"
+   email     อีเมล           type ที่ถูกต้อง, ต้องกรอก
+   password  รหัสผ่าน         type ที่ถูกต้อง, ต้องกรอก, อย่างน้อย 8 ตัว
+   phone     เบอร์มือถือ       type="tel", ไม่บังคับกรอก แต่ถ้ากรอกต้องเป็นตัวเลข 10 หลักขึ้นต้นด้วย 0 (ใช้ pattern)
+   age       อายุ            ตัวเลข, ต้องกรอก, ขั้นต่ำ 13 ปี สูงสุด 120
+   plan      แพ็กเกจ          radio 3 ตัว: free / pro / team  (อยู่ใน <fieldset> + <legend>) เลือก free ไว้ก่อน
+   terms     ยอมรับเงื่อนไข     checkbox ต้องติ๊ก
+   + ปุ่ม submit
+
+  กติกา accessibility:  ทุก input ต้องมี <label> ที่ผูกกันจริง (for/id หรือครอบ input ไว้)
+════════════════════════════════════════════════════════════════ -->
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>สมัครสมาชิก</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 16px; }
+    form { display: grid; gap: 12px; }
+    label { display: grid; gap: 4px; font-weight: 500; }
+    input:not([type=radio]):not([type=checkbox]) { padding: 8px 10px; font: inherit; border: 1px solid #cbd5e1; border-radius: 6px; }
+    /* :user-invalid แสดงสีแดงหลังจากผู้ใช้แตะช่องนั้นแล้วเท่านั้น */
+    input:user-invalid { border-color: #dc2626; outline-color: #dc2626; }
+    fieldset { border: 1px solid #cbd5e1; border-radius: 6px; }
+    fieldset label, .inline { display: flex; gap: 8px; align-items: center; font-weight: 400; }
+    button { padding: 10px; font: inherit; background: #2563eb; color: #fff; border: 0; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>สมัครสมาชิก</h1>
+
+  <form id="register" action="#" method="post">
+    <!-- TODO: สร้างฟอร์มที่นี่ -->
+  </form>
+
+  <script src="../_shared/test-runner.js"></script>
+  <script>
+    const form = document.getElementById('register');
+    const f = (n) => form.elements[n];
+
+    // input ทุกตัวต้องมี label  (input.labels คือ NodeList ของ label ที่ผูกกับ input นี้)
+    test('ทุก input มี <label> ผูกอยู่', () => {
+      const inputs = [...form.querySelectorAll('input')];
+      expect(inputs.length).toBeGreaterThan(5);
+      inputs.forEach((i) => expect(i.labels.length > 0 ? 'ok' : `input[name=${i.name}] ไม่มี label`).toBe('ok'));
+    });
+    test('name: required + autocomplete="name"', () => {
+      expect(f('name')?.required).toBe(true);
+      expect(f('name').autocomplete).toBe('name');
+    });
+    test('email: type="email" + required', () => {
+      expect(f('email')?.type).toBe('email');
+      expect(f('email').required).toBe(true);
+    });
+    test('password: type="password", required, minlength 8', () => {
+      expect(f('password')?.type).toBe('password');
+      expect(f('password').required).toBe(true);
+      expect(f('password').minLength).toBe(8);
+    });
+    test('phone: type="tel", ไม่บังคับ, pattern ถูกต้อง', () => {
+      const p = f('phone');
+      expect(p?.type).toBe('tel');
+      expect(p.required).toBe(false);
+      p.value = '0812345678'; expect(p.validity.patternMismatch).toBe(false);
+      p.value = '812345678';  expect(p.validity.patternMismatch).toBe(true);
+      p.value = '08123456789'; expect(p.validity.patternMismatch).toBe(true);
+      p.value = '08a2345678'; expect(p.validity.patternMismatch).toBe(true);
+      p.value = '';
+    });
+    test('age: type="number", required, min 13, max 120', () => {
+      const a = f('age');
+      expect(a?.type).toBe('number');
+      expect(a.required).toBe(true);
+      a.value = '12'; expect(a.validity.rangeUnderflow).toBe(true);
+      a.value = '121'; expect(a.validity.rangeOverflow).toBe(true);
+      a.value = '';
+    });
+    test('plan: radio 3 ตัว (free/pro/team) และ free ถูกเลือกไว้', () => {
+      const radios = [...form.querySelectorAll('input[type=radio][name=plan]')];
+      expect(radios.map((r) => r.value).sort()).toEqual(['free', 'pro', 'team']);
+      expect(f('plan').value).toBe('free');
+    });
+    test('radio อยู่ใน <fieldset> ที่มี <legend>', () => {
+      const fs = form.querySelector('input[name=plan]')?.closest('fieldset');
+      expect(fs).toBeTruthy();
+      expect(fs.querySelector('legend')?.textContent.trim().length || 0).toBeGreaterThan(0);
+    });
+    test('terms: checkbox ที่ required', () => {
+      expect(f('terms')?.type).toBe('checkbox');
+      expect(f('terms').required).toBe(true);
+    });
+    test('มีปุ่ม type="submit"', () => expect(form.querySelector('button[type=submit], button:not([type])')).toBeTruthy());
+    test('ฟอร์มว่าง → checkValidity() เป็น false', () => expect(form.checkValidity()).toBe(false));
+    test('กรอกครบถูกต้อง → checkValidity() เป็น true', () => {
+      f('name').value = 'สมชาย ใจดี';
+      f('email').value = 'somchai@example.com';
+      f('password').value = 'supersecret';
+      f('age').value = '25';
+      f('terms').checked = true;
+      const ok = form.checkValidity();
+      const bad = [...form.elements].filter((e) => e.willValidate && !e.checkValidity()).map((e) => e.name);
+      form.reset();
+      expect(ok ? 'valid' : 'ช่องที่ยังไม่ผ่าน: ' + bad.join(', ')).toBe('valid');
+    });
+  </script>
+</body>
+</html>

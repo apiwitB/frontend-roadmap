@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>09 เฉลย</title>
+
+  <style id="student">
+    @layer reset, base, components, utilities;
+
+    /* ── tokens (ไม่อยู่ใน layer ใด เพราะเป็นแค่ตัวแปร) ── */
+    :root {
+      --color-primary: #4f46e5;
+      --color-bg: #f8fafc;
+      --color-surface: #ffffff;
+      --color-text: #0f172a;
+      --color-muted: #64748b;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --radius: 12px;
+      color-scheme: light;
+    }
+    [data-theme="dark"] {
+      --color-bg: #0b1120;
+      --color-surface: #111827;
+      --color-text: #e5e7eb;
+      --color-muted: #94a3b8;
+      --color-primary: #818cf8;
+      color-scheme: dark;
+    }
+
+    @layer reset {
+      *, *::before, *::after { box-sizing: border-box; }
+      img { display: block; max-width: 100%; height: auto; }
+    }
+
+    @layer base {
+      body {
+        margin: 0;
+        padding: var(--space-lg);
+        font-family: system-ui, sans-serif;
+        background: var(--color-bg);
+        color: var(--color-text);
+      }
+      header { display: flex; justify-content: space-between; align-items: center; gap: var(--space-md); flex-wrap: wrap; }
+    }
+
+    @layer components {
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-md); }
+
+      .card {
+        position: relative;
+        background: var(--color-surface);
+        border: 2px solid transparent;
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .card--featured { border-color: var(--color-primary); }
+      .card__image { width: 100%; }
+      .card__title { margin: var(--space-md) var(--space-md) 0; font-size: 1.15rem; }
+      .card__body { margin: var(--space-sm) var(--space-md); color: var(--color-muted); }
+      .card__button {
+        margin: 0 var(--space-md) var(--space-md);
+        padding: var(--space-sm) var(--space-md);
+        border: 0;
+        border-radius: calc(var(--radius) / 2);
+        background: var(--color-primary);
+        color: white;
+        font: inherit;
+        cursor: pointer;
+      }
+      .card .card__badge {
+        display: inline-block;
+        position: absolute;
+        top: var(--space-sm);
+        left: var(--space-sm);
+        padding: 2px var(--space-sm);
+        border-radius: 99px;
+        background: var(--color-primary);
+        color: white;
+        font-size: .8rem;
+      }
+    }
+
+    @layer utilities {
+      .u-hidden { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>สินค้าแนะนำ</h1>
+    <button id="theme-toggle" type="button" aria-pressed="false">🌙 Dark mode</button>
+  </header>
+
+  <main class="grid">
+    <article class="card">
+      <img class="card__image" src="https://picsum.photos/seed/kb/400/220" alt="คีย์บอร์ด" width="400" height="220">
+      <h2 class="card__title">Mechanical Keyboard</h2>
+      <p class="card__body">สวิตช์เงียบ พิมพ์สบาย เหมาะกับนักพัฒนา</p>
+      <button class="card__button" type="button">ใส่ตะกร้า</button>
+    </article>
+
+    <article class="card card--featured">
+      <span class="card__badge">ขายดี</span>
+      <img class="card__image" src="https://picsum.photos/seed/mouse/400/220" alt="เมาส์" width="400" height="220">
+      <h2 class="card__title">Ergonomic Mouse</h2>
+      <p class="card__body">จับถนัดมือ ลดอาการปวดข้อมือ</p>
+      <button class="card__button" type="button">ใส่ตะกร้า</button>
+    </article>
+  </main>
+
+  <div class="card" id="layer-test">
+    <span class="card__badge u-hidden">ฉันต้องถูกซ่อน</span>
+  </div>
+
+  <script>
+    const toggle = document.getElementById('theme-toggle');
+    toggle.addEventListener('click', () => {
+      const dark = document.documentElement.dataset.theme !== 'dark';
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      toggle.setAttribute('aria-pressed', String(dark));
+    });
+  </script>
+
+  <!-- test ชุดเดียวกับแบบฝึกหัด -->
+  <script src="../../_shared/test-runner.js"></script>
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => [...document.querySelectorAll(s)];
+    const root = document.documentElement;
+    const css = (el, p) => getComputedStyle(el).getPropertyValue(p).trim();
+    const cards = () => $$('main article');
+
+    test('ข้อ 1: article ทั้ง 2 ใบมี class "card"', () => expect(cards().every((c) => c.classList.contains('card'))).toBe(true));
+    test('ข้อ 1: ทุก card มี __image, __title, __body, __button', () => {
+      cards().forEach((c) => {
+        expect(c.querySelector('img')?.classList.contains('card__image')).toBe(true);
+        expect(c.querySelector('h2')?.classList.contains('card__title')).toBe(true);
+        expect(c.querySelector('p')?.classList.contains('card__body')).toBe(true);
+        expect(c.querySelector('button')?.classList.contains('card__button')).toBe(true);
+      });
+    });
+    test('ข้อ 1: card ใบที่ 2 มี modifier card--featured (ใบแรกไม่มี)', () => {
+      expect(cards().map((c) => c.classList.contains('card--featured'))).toEqual([false, true]);
+    });
+    test('ข้อ 1: badge มี class card__badge', () => expect(cards()[1].querySelector('span')?.classList.contains('card__badge')).toBe(true));
+    test('ข้อ 1: ไม่มีชื่อ class ที่ซ้อน element (เช่น a__b__c)', () => {
+      const bad = $$('[class]').flatMap((e) => [...e.classList]).filter((c) => /__.+__/.test(c));
+      expect(bad).toEqual([]);
+    });
+    test('ข้อ 2: มี tokens ครบใน :root', () => {
+      const missing = ['--color-primary', '--color-bg', '--color-text', '--color-surface', '--space-md', '--radius'].filter((t) => !css(root, t));
+      expect(missing).toEqual([]);
+    });
+    test('ข้อ 2: ปุ่มใช้ var(--color-primary) จริง (เปลี่ยน token แล้วปุ่มเปลี่ยนตาม)', () => {
+      const btn = $('main .card__button');
+      root.style.setProperty('--color-primary', 'rgb(1, 2, 3)');
+      const bg = getComputedStyle(btn).backgroundColor;
+      root.style.removeProperty('--color-primary');
+      expect(bg).toBe('rgb(1, 2, 3)');
+    });
+    test('ข้อ 2: card--featured ใช้ขอบสี --color-primary', () => {
+      root.style.setProperty('--color-primary', 'rgb(9, 8, 7)');
+      const b = getComputedStyle($('.card--featured')).borderTopColor;
+      root.style.removeProperty('--color-primary');
+      expect(b).toBe('rgb(9, 8, 7)');
+    });
+    test('ข้อ 2: card ใช้ --radius', () => {
+      root.style.setProperty('--radius', '33px');
+      const r = getComputedStyle($('main .card')).borderTopLeftRadius;
+      root.style.removeProperty('--radius');
+      expect(r).toBe('33px');
+    });
+    test('ข้อ 3: dark theme เปลี่ยนสีพื้นหลังของ body', () => {
+      root.dataset.theme = 'light';
+      const before = getComputedStyle(document.body).backgroundColor;
+      root.dataset.theme = 'dark';
+      const after = getComputedStyle(document.body).backgroundColor;
+      root.dataset.theme = 'light';
+      expect(before !== after ? 'ok' : 'สีพื้นหลังเหมือนเดิม (ถ้าใส่ transition ไว้ที่ body ให้เอาออกก่อน เพราะ test จะวัดได้สีระหว่างเปลี่ยน)').toBe('ok');
+    });
+    test('ข้อ 3: ปุ่ม toggle สลับ data-theme และ aria-pressed', () => {
+      root.dataset.theme = 'light';
+      const btn = $('#theme-toggle');
+      btn.click();
+      const a = [root.dataset.theme, btn.getAttribute('aria-pressed')];
+      btn.click();
+      const b = [root.dataset.theme, btn.getAttribute('aria-pressed')];
+      expect([a, b]).toEqual([['dark', 'true'], ['light', 'false']]);
+    });
+    test('ข้อ 4: ประกาศ @layer reset, base, components, utilities', () => {
+      const sheet = $('#student').sheet;
+      const stmt = [...sheet.cssRules].find((r) => r instanceof CSSLayerStatementRule);
+      expect(stmt?.nameList).toEqual(['reset', 'base', 'components', 'utilities']);
+    });
+    test('ข้อ 4: .u-hidden ชนะ .card .card__badge (เพราะอยู่ layer หลังกว่า)', () => {
+      expect(getComputedStyle($('#layer-test .card__badge')).display).toBe('none');
+      const featuredBadge = $('.card--featured .card__badge');
+      expect(featuredBadge && getComputedStyle(featuredBadge).display).not.toBe('none'); // badge ปกติต้องยังแสดงอยู่
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>10 เฉลย</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; line-height: 1.6; }
+    code { background: #f1f5f9; padding: 1px 6px; border-radius: 4px; }
+    .demo { border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin: 16px 0; }
+    .demo button { font: inherit; padding: 4px 12px; }
+    .demo li.done { text-decoration: line-through; color: #94a3b8; }
+    .err { color: #dc2626; }
+    /* พื้นที่ของ test: ย้ายออกไปนอกจอ (ยังต้องโฟกัสได้ จึงใช้ display:none ไม่ได้) */
+    #test-area { position: absolute; left: -10000px; top: 0; }
+  </style>
+</head>
+<body>
+  <h1>บทที่ 10: mini-react</h1>
+  <p>แก้ <code>10-framework/mini-react.js</code> พอทำข้อ 1–4 เสร็จ demo ข้างล่างจะเริ่มทำงาน
+     และเมื่อทำข้อ 5 เสร็จ ช่องค้นหาจะไม่เสีย focus ตอนพิมพ์</p>
+
+  <h2>Demo: Counter</h2>
+  <div class="demo" id="counter-app"></div>
+
+  <h2>Demo: Todo + Search</h2>
+  <div class="demo" id="todo-app"></div>
+
+  <div id="test-area"></div>
+
+  <script src="../../_shared/test-runner.js"></script>
+  <script src="mini-react.js"></script>
+  <script src="../tests.js"></script>
+  <script>
+    // ─────── แอปตัวอย่างที่เขียนด้วย mini-react (เทียบกับ react-demo.html) ───────
+    function Counter() {
+      const [count, setCount] = useState(0);
+      return h('div', null,
+        h('button', { onClick: () => setCount(count - 1) }, '−'),
+        h('strong', { style: { margin: '0 12px', fontSize: '20px' } }, count),
+        h('button', { onClick: () => setCount(count + 1) }, '+'),
+        count >= 5 && h('p', null, '🎉 ถึง 5 แล้ว!'));
+    }
+
+    function TodoItem({ todo, onToggle }) {
+      return h('li', { className: todo.done ? 'done' : '', onClick: () => onToggle(todo.id) }, todo.text);
+    }
+
+    function TodoApp() {
+      const [todos, setTodos] = useState([
+        { id: 1, text: 'อ่านบทที่ 10', done: true },
+        { id: 2, text: 'เขียน mini-react', done: false },
+        { id: 3, text: 'ลอง React จริง', done: false },
+      ]);
+      const [query, setQuery] = useState('');
+      const toggle = (id) => setTodos(todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+      const visible = todos.filter((t) => t.text.includes(query));
+
+      return h('div', null,
+        h('input', { placeholder: 'ค้นหา… (ลองพิมพ์เร็วๆ)', value: query, onInput: (e) => setQuery(e.target.value) }),
+        h('ul', null, visible.map((t) => h(TodoItem, { todo: t, onToggle: toggle }))),
+        h('small', null, `แสดง ${visible.length}/${todos.length} · คลิกที่รายการเพื่อติ๊ก`));
+    }
+
+    for (const [App, id] of [[Counter, 'counter-app'], [TodoApp, 'todo-app']]) {
+      try {
+        mount(App, document.getElementById(id));
+      } catch (e) {
+        const el = document.getElementById(id);
+        el.innerHTML = '<p class="err"></p>';
+        el.firstChild.textContent = '⏳ ยังทำงานไม่ได้: ' + e.message;
+      }
+    }
+  </script>
+</body>
+</html>

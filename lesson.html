@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>บทเรียน</title>
+  <link rel="stylesheet" href="/_shared/site.css" />
+</head>
+<body>
+  <main class="wrap">
+    <nav class="topnav">
+      <a href="/">← กลับหน้ารวม</a>
+      <span id="pager"></span>
+    </nav>
+    <article class="md" id="content"><p>กำลังโหลด…</p></article>
+  </main>
+
+  <script src="/_shared/lessons.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script>
+    const id = new URLSearchParams(location.search).get('l');
+    const idx = LESSONS.findIndex((l) => l.id === id);
+    const box = document.getElementById('content');
+
+    if (idx < 0) {
+      box.innerHTML = '<p>ไม่พบบทเรียน</p>';
+    } else {
+      document.title = LESSONS[idx].title;
+      const prev = LESSONS[idx - 1], next = LESSONS[idx + 1];
+      document.getElementById('pager').innerHTML =
+        (prev ? `<a href="?l=${prev.id}">← ${prev.title}</a>` : '') +
+        (prev && next ? ' · ' : '') +
+        (next ? `<a href="?l=${next.id}">${next.title} →</a>` : '');
+
+      fetch(`/${id}/README.md`)
+        .then((r) => r.text())
+        .then((md) => {
+          if (window.marked) {
+            box.innerHTML = marked.parse(md);
+            // ลิงก์แบบ relative ใน README (เช่น ex1.html) ให้ชี้เข้าโฟลเดอร์ของบทนั้น
+            box.querySelectorAll('a[href]').forEach((a) => {
+              const h = a.getAttribute('href');
+              if (!/^(https?:|\/|#|mailto:)/.test(h)) a.href = `/${id}/${h}`;
+            });
+          } else {
+            // ถ้าออฟไลน์ โหลด marked ไม่ได้ ก็แสดงเป็นข้อความดิบ
+            box.innerHTML = '<pre></pre>';
+            box.firstChild.textContent = md;
+          }
+        });
+    }
+  </script>
+</body>
+</html>

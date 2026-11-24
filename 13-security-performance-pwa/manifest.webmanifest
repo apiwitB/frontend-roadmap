@@ -1,0 +1,11 @@
+{
+  "name": "Frontend Roadmap Lab: PWA",
+  "short_name": "FR Lab",
+  "start_url": "exercise.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>10 React จริง</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; line-height: 1.6; }
+    .demo { border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin: 16px 0; }
+    .demo button { font: inherit; padding: 4px 12px; }
+    li.done { text-decoration: line-through; color: #94a3b8; }
+    pre { background: #0f172a; color: #e2e8f0; padding: 12px 16px; border-radius: 8px; overflow: auto; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>แอปเดียวกัน แต่ใช้ React จริง</h1>
+  <p>ให้เทียบกับ <a href="exercise.html">exercise.html</a> จะเห็นว่าแทบไม่ต่างกัน แค่เปลี่ยน
+     <code>h</code> เป็น <code>React.createElement</code> และเปลี่ยน <code>mount</code> เป็น <code>createRoot().render</code></p>
+
+  <h2>Counter</h2>
+  <div class="demo" id="counter-app"></div>
+
+  <h2>Todo + Search</h2>
+  <div class="demo" id="todo-app"></div>
+
+  <h2>ถ้าเขียนด้วย JSX (ใน Vite)</h2>
+  <pre>function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    &lt;div&gt;
+      &lt;button onClick={() =&gt; setCount(count - 1)}&gt;−&lt;/button&gt;
+      &lt;strong&gt;{count}&lt;/strong&gt;
+      &lt;button onClick={() =&gt; setCount(count + 1)}&gt;+&lt;/button&gt;
+      {count &gt;= 5 &amp;&amp; &lt;p&gt;🎉 ถึง 5 แล้ว!&lt;/p&gt;}
+    &lt;/div&gt;
+  );
+}</pre>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.development.js"></script>
+  <script>
+    const h = React.createElement; // ← h ของเราคือฟังก์ชันนี้
+    const { useState, useEffect } = React;
+
+    function Counter() {
+      const [count, setCount] = useState(0);
+      return h('div', null,
+        h('button', { onClick: () => setCount(count - 1) }, '−'),
+        h('strong', { style: { margin: '0 12px', fontSize: '20px' } }, count),
+        h('button', { onClick: () => setCount(count + 1) }, '+'),
+        count >= 5 && h('p', null, '🎉 ถึง 5 แล้ว!'));
+    }
+
+    function TodoItem({ todo, onToggle }) {
+      return h('li', { className: todo.done ? 'done' : '', onClick: () => onToggle(todo.id) }, todo.text);
+    }
+
+    function TodoApp() {
+      const [todos, setTodos] = useState([
+        { id: 1, text: 'อ่านบทที่ 10', done: true },
+        { id: 2, text: 'เขียน mini-react', done: false },
+        { id: 3, text: 'ลอง React จริง', done: false },
+      ]);
+      const [query, setQuery] = useState('');
+
+      // useEffect: side effect ที่รันหลัง render (ตัวอย่างนี้เปลี่ยน title ของแท็บ)
+      useEffect(() => {
+        const left = todos.filter((t) => !t.done).length;
+        document.title = `(${left}) Todo – React`;
+      }, [todos]); // ← รันใหม่เฉพาะเมื่อ todos เปลี่ยน
+
+      const toggle = (id) => setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+      const visible = todos.filter((t) => t.text.includes(query));
+
+      return h('div', null,
+        // React ใช้ onChange กับ input (พฤติกรรมเหมือน onInput ของ DOM)
+        h('input', { placeholder: 'ค้นหา…', value: query, onChange: (e) => setQuery(e.target.value) }),
+        // key: ให้ React จับคู่ item เดิมกับ item ใหม่ได้ถูกตัว
+        h('ul', null, visible.map((t) => h(TodoItem, { key: t.id, todo: t, onToggle: toggle }))),
+        h('small', null, `แสดง ${visible.length}/${todos.length}`));
+    }
+
+    ReactDOM.createRoot(document.getElementById('counter-app')).render(h(Counter));
+    ReactDOM.createRoot(document.getElementById('todo-app')).render(h(TodoApp));
+  </script>
+</body>
+</html>

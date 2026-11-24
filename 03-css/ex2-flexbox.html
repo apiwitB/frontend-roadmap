@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>03-2 Flexbox</title>
+
+  <!-- 🔒 ห้ามแก้ -->
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 24px; background: #f8fafc; }
+    section { margin-bottom: 40px; }
+    .navbar { background: #1e293b; color: white; padding: 12px 20px; }
+    .logo { font-size: 28px; font-weight: 800; }
+    .links { list-style: none; margin: 0; padding: 0; }
+    .links a { color: #cbd5e1; }
+    .cards { width: 720px; max-width: 100%; }
+    .card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+    .card.long { /* การ์ดนี้มีเนื้อหาเยอะกว่า */ }
+    .stage { height: 200px; background: #e0e7ff; border-radius: 8px; }
+    .box { width: 120px; height: 60px; background: #4f46e5; color: white; display: grid; place-items: center; border-radius: 6px; }
+    .page { height: 300px; border: 2px dashed #94a3b8; }
+    .page-header, .page-footer { background: #cbd5e1; padding: 8px; }
+    .page-main { padding: 8px; }
+  </style>
+
+  <!-- ✏️ เขียนคำตอบที่นี่ -->
+  <style id="student">
+    /* ข้อ 1: .navbar  โลโก้ชิดซ้าย เมนูชิดขวา และอยู่กึ่งกลางแนวตั้ง */
+
+    /* ข้อ 2: .links  เรียงแนวนอน ห่างกัน 16px */
+
+    /* ข้อ 3: .cards  การ์ด 3 ใบเรียงแถวเดียว กว้างเท่ากัน ห่างกัน 16px
+               (ระวัง! การ์ด .long มีเนื้อหาเยอะกว่า แต่ต้องกว้างเท่าใบอื่น) */
+
+    /* ข้อ 4: .stage  จัด .box ให้อยู่ตรงกลางทั้งแนวตั้งและแนวนอน */
+
+    /* ข้อ 5: .page  ดัน .page-footer ให้ติดขอบล่างของ .page เสมอ (sticky footer)
+               โดยไม่ใช้ position (คำใบ้: flex-direction: column + flex: 1) */
+
+  </style>
+</head>
+<body>
+  <section>
+    <h2>ข้อ 1–2: Navbar</h2>
+    <nav class="navbar">
+      <div class="logo">◆ Brand</div>
+      <ul class="links">
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Docs</a></li>
+        <li><a href="#">Blog</a></li>
+      </ul>
+    </nav>
+  </section>
+
+  <section>
+    <h2>ข้อ 3: Cards</h2>
+    <div class="cards">
+      <div class="card">สั้น</div>
+      <div class="card long">การ์ดใบนี้มีข้อความยาวมากกว่าใบอื่นๆ เยอะเลย ยาวมากๆ ยาวจนอยากดันให้ตัวเองกว้างกว่าเพื่อน</div>
+      <div class="card">สั้น</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>ข้อ 4: จัดกลาง</h2>
+    <div class="stage"><div class="box">ตรงกลาง</div></div>
+  </section>
+
+  <section>
+    <h2>ข้อ 5: Sticky footer</h2>
+    <div class="page">
+      <div class="page-header">Header</div>
+      <div class="page-main">เนื้อหาน้อยๆ</div>
+      <div class="page-footer">Footer ต้องอยู่ล่างสุด</div>
+    </div>
+  </section>
+
+  <script src="../_shared/test-runner.js"></script>
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => [...document.querySelectorAll(s)];
+    const R = (el) => (typeof el === 'string' ? $(el) : el).getBoundingClientRect();
+    const near = (a, b, d = 1.5) => Math.abs(a - b) <= d;
+    const cy = (r) => r.top + r.height / 2;
+    const cx = (r) => r.left + r.width / 2;
+
+    test('ข้อ 1: โลโก้ชิดซ้าย เมนูชิดขวา', () => {
+      const n = R('.navbar'), l = R('.logo'), m = R('.links');
+      expect(near(l.left, n.left + 20) ? 'ok' : 'โลโก้ไม่ชิดซ้าย').toBe('ok');
+      expect(near(m.right, n.right - 20) ? 'ok' : 'เมนูไม่ชิดขวา').toBe('ok');
+    });
+    test('ข้อ 1: โลโก้และเมนูอยู่กึ่งกลางแนวตั้งเดียวกัน', () => {
+      expect(near(cy(R('.logo')), cy(R('.links'))) ? 'ok' : 'ยังไม่ได้ align-items').toBe('ok');
+    });
+    test('ข้อ 2: เมนูเรียงแนวนอนและห่างกัน 16px', () => {
+      const li = $$('.links li').map(R);
+      expect(li.every((r) => near(r.top, li[0].top)) ? 'ok' : 'ยังไม่เรียงแนวนอน').toBe('ok');
+      expect(Math.round(li[1].left - li[0].right)).toBe(16);
+    });
+    test('ข้อ 3: การ์ด 3 ใบอยู่แถวเดียวกัน', () => {
+      const c = $$('.card').map(R);
+      expect(c.every((r) => near(r.top, c[0].top))).toBe(true);
+    });
+    test('ข้อ 3: การ์ดกว้างเท่ากัน (แม้เนื้อหาไม่เท่ากัน)', () => {
+      const w = $$('.card').map((e) => Math.round(R(e).width));
+      expect(Math.max(...w) - Math.min(...w) <= 1 ? 'ok' : `กว้าง ${w.join(', ')}`).toBe('ok');
+    });
+    test('ข้อ 3: ห่างกัน 16px และเต็มความกว้างกล่อง', () => {
+      const c = $$('.card').map(R), box = R('.cards');
+      expect(Math.round(c[1].left - c[0].right)).toBe(16);
+      expect(near(c[2].right, box.right)).toBe(true);
+    });
+    test('ข้อ 4: .box อยู่ตรงกลาง .stage', () => {
+      const s = R('.stage'), b = R('.box');
+      expect(near(cx(s), cx(b)) && near(cy(s), cy(b)) ? 'ok' : `ห่างจากกลาง x:${Math.round(cx(b) - cx(s))} y:${Math.round(cy(b) - cy(s))}`).toBe('ok');
+    });
+    test('ข้อ 5: footer ติดขอบล่างของ .page', () => {
+      const p = R('.page'), f = R('.page-footer');
+      expect(near(f.bottom, p.bottom - 2, 2) ? 'ok' : `footer ห่างขอบล่าง ${Math.round(p.bottom - 2 - f.bottom)}px`).toBe('ok');
+    });
+    test('ข้อ 5: ไม่ใช้ position absolute/fixed', () => {
+      expect(getComputedStyle($('.page-footer')).position).toBe('static');
+    });
+  </script>
+</body>
+</html>

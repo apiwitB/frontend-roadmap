@@ -1,0 +1,119 @@
+<!-- ════════════════════════════════════════════════════════════════
+  แบบฝึกหัด 02-1: แปลง "div soup" ให้เป็น semantic HTML
+  ────────────────────────────────────────────────────────────────
+  หน้านี้ "ดูเหมือน" ถูกต้อง แต่ทุกอย่างเป็น <div> หมด
+  ให้แก้ให้ test ผ่านทุกข้อ (ดูผลที่มุมขวาล่าง)
+
+  TODO:
+   - ใส่ <!doctype html>, lang="th", meta charset, meta viewport, <title>
+   - เปลี่ยน div ที่เป็นหัว/เมนู/เนื้อหาหลัก/บทความ/sidebar/ท้ายหน้า ให้เป็น tag ที่ถูกต้อง
+   - หัวข้อให้ใช้ <h1>..<h3> แทน <div class="big-title"> (ต้องมี h1 แค่ 1 อัน!)
+   - ปุ่ม "สมัครรับข่าว" ต้องเป็น <button> จริงๆ
+   - วันที่ให้ใช้ <time datetime="YYYY-MM-DD">
+   - รูปทุกรูปต้องมี alt (รูปตกแต่ง → alt="")
+   - เมนูควรเป็นลิสต์ (<ul><li><a>)
+  ห้ามลบ class ออก (CSS ใช้อยู่) แต่เปลี่ยน tag ได้
+════════════════════════════════════════════════════════════════ -->
+<html>
+<head>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; color: #1f2937; }
+    .top { background: #1e3a8a; color: white; padding: 16px 24px; }
+    .logo { font-size: 24px; font-weight: bold; margin: 0; }
+    .menu ul, .menu { list-style: none; padding: 0; margin: 8px 0 0; display: flex; gap: 16px; }
+    .menu a { color: #bfdbfe; }
+    .layout { display: flex; gap: 24px; padding: 24px; flex-wrap: wrap; }
+    .content { flex: 3; min-width: 280px; }
+    .side { flex: 1; min-width: 200px; background: #f1f5f9; padding: 16px; border-radius: 8px; }
+    .post { border-bottom: 1px solid #e5e7eb; padding-bottom: 16px; margin-bottom: 16px; }
+    .big-title { font-size: 28px; font-weight: bold; margin: 0 0 16px; }
+    .post-title { font-size: 20px; font-weight: bold; margin: 0; }
+    .date { color: #6b7280; font-size: 14px; }
+    .fake-btn { display: inline-block; background: #2563eb; color: white; padding: 8px 14px; border-radius: 6px; cursor: pointer; border: 0; font: inherit; }
+    .bottom { background: #111827; color: #9ca3af; padding: 16px 24px; }
+    img { max-width: 100%; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="logo">DevBlog</div>
+    <div class="menu">
+      <a href="#">หน้าแรก</a>
+      <a href="#">บทความ</a>
+      <a href="#">เกี่ยวกับ</a>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="content">
+      <div class="big-title">บทความล่าสุด</div>
+
+      <div class="post">
+        <div class="post-title">CSS Grid ใน 10 นาที</div>
+        <div class="date">24 พฤศจิกายน 2026</div>
+        <img src="https://picsum.photos/seed/grid/600/200" width="600" height="200">
+        <p>Grid ทำให้ layout 2 มิติเป็นเรื่องง่าย…</p>
+      </div>
+
+      <div class="post">
+        <div class="post-title">Closure คืออะไร</div>
+        <div class="date">20 พฤศจิกายน 2026</div>
+        <p>Closure คือฟังก์ชันที่จำ scope ที่ตัวเองถูกสร้างได้…</p>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="post-title">รับข่าวสาร</div>
+      <img src="https://picsum.photos/seed/deco/200/60" width="200" height="60"> <!-- รูปตกแต่ง -->
+      <p>รับบทความใหม่ทุกสัปดาห์</p>
+      <div class="fake-btn" onclick="alert('ขอบคุณ!')">สมัครรับข่าว</div>
+    </div>
+  </div>
+
+  <div class="bottom">© 2026 DevBlog</div>
+
+  <script src="../_shared/test-runner.js"></script>
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => [...document.querySelectorAll(s)];
+
+    test('มี <!doctype html> (ไม่อยู่ใน quirks mode)', () => {
+      expect(document.compatMode).toBe('CSS1Compat');
+    });
+    test('<html lang="th">', () => expect(document.documentElement.lang).toBe('th'));
+    test('มี meta charset = utf-8', () => expect(($('meta[charset]')?.getAttribute('charset') || '').toLowerCase()).toBe('utf-8'));
+    test('มี meta viewport ที่มี width=device-width', () => expect($('meta[name=viewport]')?.content || '').toContain('width=device-width'));
+    test('มี <title> ที่ไม่ว่าง', () => expect(document.title.trim().length).toBeGreaterThan(0));
+    test('มี <header> ที่มี <nav> อยู่ข้างใน', () => expect($('header nav')).toBeTruthy());
+    test('เมนูเป็นลิสต์: nav > ul > li > a (3 ลิงก์)', () => expect($$('nav ul > li > a')).toHaveLength(3));
+    test('มี <main> 1 อันพอดี', () => expect($$('main')).toHaveLength(1));
+    test('บทความเป็น <article> 2 อัน อยู่ใน main', () => expect($$('main article')).toHaveLength(2));
+    test('มี <h1> 1 อันพอดี', () => expect($$('h1')).toHaveLength(1));
+    test('หัวข้อบทความเป็น <h2> ภายใน article', () => expect($$('article h2')).toHaveLength(2));
+    test('วันที่เป็น <time datetime="YYYY-MM-DD">', () => {
+      const t = $$('time');
+      expect(t).toHaveLength(2);
+      t.forEach((x) => expect(x.getAttribute('datetime') || '').toMatch(/^\d{4}-\d{2}-\d{2}$/));
+    });
+    test('sidebar เป็น <aside> (อยู่นอก main)', () => {
+      expect($('aside')).toBeTruthy();
+      expect($('main aside')).toBeFalsy();
+    });
+    test('รูปทุกรูปมี attribute alt', () => $$('img').forEach((img) => expect(img.hasAttribute('alt')).toBe(true)));
+    test('รูปบทความมี alt ที่มีความหมาย / รูปตกแต่งมี alt=""', () => {
+      expect($('article img')?.alt.trim().length || 0).toBeGreaterThan(0);
+      expect($('aside img')?.getAttribute('alt')).toBe('');
+    });
+    test('ปุ่มสมัครเป็น <button type="button">', () => {
+      const b = $('aside button');
+      expect(b).toBeTruthy();
+      expect(b.type).toBe('button');
+    });
+    test('มี <footer>', () => expect($('footer')).toBeTruthy());
+    test('ไม่เหลือ div ที่ทำหน้าที่ landmark', () => {
+      const bad = $$('div.top, div.menu, div.content, div.side, div.post, div.bottom, div.big-title, div.post-title, div.date, div.fake-btn');
+      expect(bad.map((d) => d.className)).toEqual([]);
+    });
+  </script>
+</body>
+</html>

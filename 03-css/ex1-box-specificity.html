@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>03-1 Box model & Specificity</title>
+
+  <!-- 🔒 ห้ามแก้ style ชุดนี้ -->
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 24px; margin: 0; }
+    section { margin-bottom: 40px; }
+    .card { width: 300px; padding: 20px; border: 5px solid #6366f1; background: #eef2ff; }
+    .content p { color: blue; }
+    .tag { background: #fde68a; padding: 6px 10px; }
+    .a, .b { background: #bae6fd; height: 40px; }
+    .a { margin-bottom: 30px; }
+    .b { margin-top: 20px; }
+    .product { width: 260px; height: 140px; background: #f1f5f9; border: 1px solid #cbd5e1; }
+    .badge { background: #dc2626; color: white; padding: 2px 8px; font-size: 12px; }
+  </style>
+
+  <!-- ✏️ เขียนคำตอบของคุณที่นี่ -->
+  <style id="student">
+    /* ข้อ 1: ทำให้ .card กว้างรวม 300px พอดี (โดยไม่แก้ width/padding/border) */
+
+    /* ข้อ 2: ทำให้ .note เป็นสีแดง rgb(220, 38, 38) หรือ #dc2626 โดยไม่ใช้ !important และไม่ใช้ id */
+
+    /* ข้อ 3: ทำให้ .tag (ซึ่งเป็น <span>) กำหนดความกว้าง 80px ได้ */
+
+    /* ข้อ 5: วาง .badge ไว้ที่มุมขวาบนของ .product พอดี (คำใบ้: relative + absolute) */
+
+  </style>
+</head>
+<body>
+  <section>
+    <h2>ข้อ 1: box-sizing</h2>
+    <div class="card">ฉันกว้างเท่าไร? ลองวัดใน DevTools</div>
+  </section>
+
+  <section>
+    <h2>ข้อ 2: specificity</h2>
+    <div class="content">
+      <p>ย่อหน้าปกติ (สีน้ำเงิน)</p>
+      <p class="note">ย่อหน้านี้ต้องเป็นสีแดง</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>ข้อ 3: inline vs inline-block</h2>
+    <p>ข้อความ <span class="tag">แท็ก</span> ข้อความต่อ</p>
+  </section>
+
+  <section>
+    <h2>ข้อ 4: margin collapse (ทายก่อนดู!)</h2>
+    <div class="a">A: margin-bottom 30px</div>
+    <div class="b">B: margin-top 20px</div>
+    <script>
+      // ✏️ ข้อ 4: A กับ B จะห่างกันกี่ px? ทายแล้วใส่ตัวเลข
+      window.answerGap = null; // TODO
+    </script>
+  </section>
+
+  <section>
+    <h2>ข้อ 5: position</h2>
+    <div class="product">
+      สินค้า
+      <span class="badge">SALE</span>
+    </div>
+  </section>
+
+  <script src="../_shared/test-runner.js"></script>
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const rect = (s) => $(s).getBoundingClientRect();
+    const studentCSS = document.getElementById('student').textContent.replace(/\/\*[\s\S]*?\*\//g, ''); // ตัด comment ออก
+
+    test('ข้อ 1: .card กว้างรวม 300px', () => expect(Math.round(rect('.card').width)).toBe(300));
+    test('ข้อ 1: ไม่แก้ width/padding/border ของ .card', () => {
+      const cs = getComputedStyle($('.card'));
+      expect([cs.paddingLeft, cs.borderLeftWidth]).toEqual(['20px', '5px']);
+    });
+    test('ข้อ 2: .note เป็นสีแดง', () => expect(getComputedStyle($('.note')).color).toBe('rgb(220, 38, 38)'));
+    test('ข้อ 2: ย่อหน้าอื่นยังเป็นสีน้ำเงิน', () => expect(getComputedStyle($('.content p')).color).toBe('rgb(0, 0, 255)'));
+    test('ข้อ 2: ไม่ใช้ !important และไม่ใช้ #id', () => {
+      expect(studentCSS.includes('!important')).toBe(false);
+      expect(/#[a-z_-]/i.test(studentCSS.replace(/#[0-9a-f]{3,8}\b/gi, ''))).toBe(false);
+    });
+    test('ข้อ 3: .tag กว้าง 80px (border-box หรือ content-box ก็ได้)', () => {
+      const w = Math.round(rect('.tag').width);
+      expect(w === 80 || w === 100 ? 'ok' : `กว้าง ${w}px`).toBe('ok');
+    });
+    test('ข้อ 3: .tag ยังอยู่บรรทัดเดียวกับข้อความ', () => {
+      expect(['inline-block', 'inline-flex'].includes(getComputedStyle($('.tag')).display)).toBe(true);
+    });
+    test('ข้อ 4: ทายระยะห่างระหว่าง A กับ B ถูก', () => {
+      const real = Math.round(rect('.b').top - rect('.a').bottom);
+      expect(window.answerGap === null ? 'ยังไม่ได้ทาย (TODO)' : window.answerGap).toBe(real);
+    });
+    test('ข้อ 5: .badge อยู่มุมขวาบนของ .product', () => {
+      const p = rect('.product'), b = rect('.badge');
+      expect(Math.abs(b.top - p.top) <= 1 && Math.abs(b.right - p.right) <= 1
+        ? 'ok' : `badge อยู่ที่ top ${Math.round(b.top - p.top)}, right ${Math.round(p.right - b.right)} (ควรเป็น 0, 0)`).toBe('ok');
+    });
+    test('ข้อ 5: .product ยังอยู่ที่ตำแหน่งเดิม (position ไม่ได้ทำให้ layout เพี้ยน)', () => {
+      expect(getComputedStyle($('.product')).position).toBe('relative');
+    });
+  </script>
+</body>
+</html>

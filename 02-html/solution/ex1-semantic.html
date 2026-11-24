@@ -1,0 +1,113 @@
+<!doctype html>
+<!-- เฉลย 02-1 -->
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>บทความล่าสุด | DevBlog</title>
+  <meta name="description" content="บทความสอนเขียนเว็บ CSS และ JavaScript">
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; color: #1f2937; }
+    .top { background: #1e3a8a; color: white; padding: 16px 24px; }
+    .logo { font-size: 24px; font-weight: bold; margin: 0; }
+    .menu ul, .menu { list-style: none; padding: 0; margin: 8px 0 0; display: flex; gap: 16px; }
+    .menu a { color: #bfdbfe; }
+    .layout { display: flex; gap: 24px; padding: 24px; flex-wrap: wrap; }
+    .content { flex: 3; min-width: 280px; }
+    .side { flex: 1; min-width: 200px; background: #f1f5f9; padding: 16px; border-radius: 8px; }
+    .post { border-bottom: 1px solid #e5e7eb; padding-bottom: 16px; margin-bottom: 16px; }
+    .big-title { font-size: 28px; font-weight: bold; margin: 0 0 16px; }
+    .post-title { font-size: 20px; font-weight: bold; margin: 0; }
+    .date { color: #6b7280; font-size: 14px; }
+    .fake-btn { display: inline-block; background: #2563eb; color: white; padding: 8px 14px; border-radius: 6px; cursor: pointer; border: 0; font: inherit; }
+    .bottom { background: #111827; color: #9ca3af; padding: 16px 24px; }
+    img { max-width: 100%; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <!-- โลโก้ไม่ใช่ h1 เพราะ h1 ควรเป็นหัวข้อของ "หน้านี้" -->
+    <p class="logo">DevBlog</p>
+    <nav class="menu" aria-label="เมนูหลัก">
+      <ul>
+        <li><a href="#">หน้าแรก</a></li>
+        <li><a href="#">บทความ</a></li>
+        <li><a href="#">เกี่ยวกับ</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="layout"> <!-- div ตรงนี้ใช้ได้ เพราะมีไว้แค่จัด layout ไม่ได้มีความหมาย -->
+    <main class="content">
+      <h1 class="big-title">บทความล่าสุด</h1>
+
+      <article class="post">
+        <h2 class="post-title">CSS Grid ใน 10 นาที</h2>
+        <time class="date" datetime="2026-11-24">24 พฤศจิกายน 2026</time>
+        <img src="https://picsum.photos/seed/grid/600/200" width="600" height="200" alt="ตัวอย่าง layout แบบ grid 3 คอลัมน์">
+        <p>Grid ทำให้ layout 2 มิติเป็นเรื่องง่าย…</p>
+      </article>
+
+      <article class="post">
+        <h2 class="post-title">Closure คืออะไร</h2>
+        <time class="date" datetime="2026-11-20">20 พฤศจิกายน 2026</time>
+        <p>Closure คือฟังก์ชันที่จำ scope ที่ตัวเองถูกสร้างได้…</p>
+      </article>
+    </main>
+
+    <aside class="side">
+      <h2 class="post-title">รับข่าวสาร</h2>
+      <img src="https://picsum.photos/seed/deco/200/60" width="200" height="60" alt="">
+      <p>รับบทความใหม่ทุกสัปดาห์</p>
+      <button type="button" class="fake-btn" onclick="alert('ขอบคุณ!')">สมัครรับข่าว</button>
+    </aside>
+  </div>
+
+  <footer class="bottom">© 2026 DevBlog</footer>
+
+  <!-- test ชุดเดียวกับไฟล์แบบฝึกหัด -->
+  <script src="../../_shared/test-runner.js"></script>
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => [...document.querySelectorAll(s)];
+
+    test('มี <!doctype html> (ไม่อยู่ใน quirks mode)', () => {
+      expect(document.compatMode).toBe('CSS1Compat');
+    });
+    test('<html lang="th">', () => expect(document.documentElement.lang).toBe('th'));
+    test('มี meta charset = utf-8', () => expect(($('meta[charset]')?.getAttribute('charset') || '').toLowerCase()).toBe('utf-8'));
+    test('มี meta viewport ที่มี width=device-width', () => expect($('meta[name=viewport]')?.content || '').toContain('width=device-width'));
+    test('มี <title> ที่ไม่ว่าง', () => expect(document.title.trim().length).toBeGreaterThan(0));
+    test('มี <header> ที่มี <nav> อยู่ข้างใน', () => expect($('header nav')).toBeTruthy());
+    test('เมนูเป็นลิสต์: nav > ul > li > a (3 ลิงก์)', () => expect($$('nav ul > li > a')).toHaveLength(3));
+    test('มี <main> 1 อันพอดี', () => expect($$('main')).toHaveLength(1));
+    test('บทความเป็น <article> 2 อัน อยู่ใน main', () => expect($$('main article')).toHaveLength(2));
+    test('มี <h1> 1 อันพอดี', () => expect($$('h1')).toHaveLength(1));
+    test('หัวข้อบทความเป็น <h2> ภายใน article', () => expect($$('article h2')).toHaveLength(2));
+    test('วันที่เป็น <time datetime="YYYY-MM-DD">', () => {
+      const t = $$('time');
+      expect(t).toHaveLength(2);
+      t.forEach((x) => expect(x.getAttribute('datetime') || '').toMatch(/^\d{4}-\d{2}-\d{2}$/));
+    });
+    test('sidebar เป็น <aside> (อยู่นอก main)', () => {
+      expect($('aside')).toBeTruthy();
+      expect($('main aside')).toBeFalsy();
+    });
+    test('รูปทุกรูปมี attribute alt', () => $$('img').forEach((img) => expect(img.hasAttribute('alt')).toBe(true)));
+    test('รูปบทความมี alt ที่มีความหมาย / รูปตกแต่งมี alt=""', () => {
+      expect($('article img')?.alt.trim().length || 0).toBeGreaterThan(0);
+      expect($('aside img')?.getAttribute('alt')).toBe('');
+    });
+    test('ปุ่มสมัครเป็น <button type="button">', () => {
+      const b = $('aside button');
+      expect(b).toBeTruthy();
+      expect(b.type).toBe('button');
+    });
+    test('มี <footer>', () => expect($('footer')).toBeTruthy());
+    test('ไม่เหลือ div ที่ทำหน้าที่ landmark', () => {
+      const bad = $$('div.top, div.menu, div.content, div.side, div.post, div.bottom, div.big-title, div.post-title, div.date, div.fake-btn');
+      expect(bad.map((d) => d.className)).toEqual([]);
+    });
+  </script>
+</body>
+</html>

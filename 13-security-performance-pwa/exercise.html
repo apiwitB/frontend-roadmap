@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>13 Security, Performance & PWA</title>
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 16px; line-height: 1.6; }
+    section { margin: 32px 0; }
+    .comment { border-left: 3px solid #4f46e5; padding: 4px 12px; margin: 8px 0; background: #f8fafc; }
+    .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+    .gallery img { width: 100%; height: auto; border-radius: 6px; background: #e2e8f0; }
+    .spacer { height: 120vh; display: grid; place-items: center; color: #94a3b8; border: 2px dashed #e2e8f0; border-radius: 8px; }
+    input { font: inherit; padding: 6px 10px; }
+  </style>
+</head>
+<body>
+  <h1>บทที่ 13: Security, Performance & PWA</h1>
+
+  <section>
+    <h2>XSS playground (ข้อ 1–3)</h2>
+    <div id="comments"></div>
+  </section>
+
+  <section>
+    <h2>Debounce demo (ข้อ 4)</h2>
+    <input id="search" placeholder="พิมพ์เร็วๆ ดู…">
+    <p id="search-log"></p>
+  </section>
+
+  <div class="spacer">⬇ เลื่อนลงไปข้างล่าง (รูปข้างล่างควรเริ่มโหลดเมื่อเลื่อนใกล้ถึง ดูได้ในแท็บ Network)</div>
+
+  <section>
+    <h2>Gallery (ข้อ 6)</h2>
+    <!-- ✏️ ข้อ 6: รูปทุกรูปต้องมี loading="lazy", decoding="async" และ width="400" height="300" (เพื่อกัน CLS) -->
+    <div class="gallery">
+      <img src="https://picsum.photos/seed/p1/400/300" alt="ภาพ 1">
+      <img src="https://picsum.photos/seed/p2/400/300" alt="ภาพ 2">
+      <img src="https://picsum.photos/seed/p3/400/300" alt="ภาพ 3">
+      <img src="https://picsum.photos/seed/p4/400/300" alt="ภาพ 4">
+      <img src="https://picsum.photos/seed/p5/400/300" alt="ภาพ 5">
+      <img src="https://picsum.photos/seed/p6/400/300" alt="ภาพ 6">
+    </div>
+  </section>
+
+  <script src="../_shared/test-runner.js"></script>
+  <script src="exercise.js"></script>
+  <script>
+    // ตัวอย่าง comment จากผู้ใช้ (บางอันเป็นการโจมตี)
+    const sample = [
+      { author: 'Ann', text: 'บทความดีมาก!' },
+      { author: '<b>Hacker</b>', text: '<img src=x onerror="window.__pwned = true; alert(\'XSS!\')">' },
+    ];
+    try { sample.forEach((c) => renderComment(document.getElementById('comments'), c)); } catch {}
+
+    const $$ = (s) => [...document.querySelectorAll(s)];
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+    test('ข้อ 1: escapeHTML แปลงอักขระพิเศษครบ', () => {
+      expect(escapeHTML(`<a href="x">Tom & Jerry's</a>`)).toBe('&lt;a href=&quot;x&quot;&gt;Tom &amp; Jerry&#39;s&lt;/a&gt;');
+      expect(escapeHTML('&lt;')).toBe('&amp;lt;');
+      expect(escapeHTML('ปกติ')).toBe('ปกติ');
+    });
+
+    test('ข้อ 2: renderComment สร้างโครงสร้างถูกต้อง', () => {
+      const box = document.createElement('div');
+      renderComment(box, { author: 'A', text: 'B' });
+      expect(box.innerHTML).toBe('<article class="comment"><strong>A</strong><p>B</p></article>');
+    });
+    test('ข้อ 2: renderComment กัน XSS (ไม่สร้าง <img> และ <b>)', async () => {
+      const box = document.createElement('div');
+      document.body.append(box);
+      renderComment(box, { author: '<b>x</b>', text: '<img src=x onerror="window.__pwned2 = true">' });
+      await sleep(50);
+      expect(box.querySelector('img, b')).toBe(null);
+      expect(window.__pwned2).toBe(undefined);
+      expect(box.querySelector('p').textContent).toContain('<img');
+      box.remove();
+    });
+    test('ข้อ 2: comment ตัวอย่างบนหน้าไม่โดนโจมตี', () => {
+      expect(window.__pwned).toBe(undefined);
+      expect($$('#comments .comment')).toHaveLength(2);
+    });
+
+    test('ข้อ 3: safeUrl', () => {
+      expect(safeUrl('https://example.com/a')).toBe('https://example.com/a');
+      expect(safeUrl('http://example.com')).toBe('http://example.com');
+      expect(safeUrl('/profile?id=1')).toBe('/profile?id=1');
+      expect(safeUrl('javascript:alert(1)')).toBe('#');
+      expect(safeUrl(' JaVaScRiPt:alert(1)')).toBe('#');
+      expect(safeUrl('data:text/html,<script>alert(1)<\/script>')).toBe('#'); // <\/ กันไม่ให้ browser ปิด <script> ของหน้านี้ก่อนเวลา
+    });
+
+    test('ข้อ 4: debounce เรียกครั้งเดียวด้วย args ล่าสุด', async () => {
+      const calls = [];
+      const d = debounce((x) => calls.push(x), 60);
+      d(1); d(2); d(3);
+      expect(calls).toEqual([]);
+      await sleep(30);
+      d(4);                  // ยังเรียกอยู่ → ต้องเริ่มนับเวลาใหม่
+      await sleep(40);
+      expect(calls).toEqual([]);
+      await sleep(60);
+      expect(calls).toEqual([4]);
+    });
+    test('ข้อ 4: debounce ส่ง this ต่อ', async () => {
+      let seen;
+      const obj = { name: 'obj', run: debounce(function () { seen = this && this.name; }, 10) };
+      obj.run();
+      await sleep(40);
+      expect(seen).toBe('obj');
+    });
+
+    test('ข้อ 5: throttle เรียกทันที แล้วไม่ทำอะไรภายใน ms', async () => {
+      const calls = [];
+      const t = throttle((x) => calls.push(x), 80);
+      t(1); t(2); t(3);
+      expect(calls).toEqual([1]);
+      await sleep(100);
+      t(4); t(5);
+      expect(calls).toEqual([1, 4]);
+    });
+
+    test('ข้อ 6: รูปใน gallery มี loading="lazy" และ decoding="async"', () => {
+      $$('.gallery img').forEach((img) => {
+        expect(img.getAttribute('loading')).toBe('lazy');
+        expect(img.getAttribute('decoding')).toBe('async');
+      });
+    });
+    test('ข้อ 6: รูปใน gallery มี width/height (กัน CLS)', () => {
+      $$('.gallery img').forEach((img) => {
+        expect([img.getAttribute('width'), img.getAttribute('height')]).toEqual(['400', '300']);
+      });
+    });
+
+    test('ข้อ 7: มี manifest ที่ใช้ได้', async () => {
+      const m = await (await fetch(document.querySelector('link[rel=manifest]').href)).json();
+      expect(m.name.length > 0 && m.icons.length > 0).toBe(true);
+    });
+    test('ข้อ 7: ลงทะเบียน Service Worker แล้ว', async () => {
+      const reg = await navigator.serviceWorker.getRegistration();
+      expect(reg ? 'ok' : 'ยังไม่ได้ register').toBe('ok');
+    });
+    test('ข้อ 7: SW เก็บไฟล์ลง cache "lab-v1"', async () => {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (!reg) throw new Error('ยังไม่ได้ register');
+      await waitFor(() => reg.active, { timeout: 3000 });
+      await sleep(200);
+      expect(await caches.match('exercise.html') ? 'ok' : 'ยังไม่มี exercise.html ใน cache (install ทำงานหรือยัง?)').toBe('ok');
+    });
+    test('ข้อ 7: SW ใช้ network-first (แก้ไฟล์แล้วเห็นผลทันที)', async () => {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (!reg) throw new Error('ยังไม่ได้ register');
+      await waitFor(() => navigator.serviceWorker.controller, { timeout: 3000 }); // รอให้ SW เริ่มควบคุมหน้านี้
+      const res = await fetch('exercise.js?probe=' + Date.now());
+      expect(res.ok).toBe(true);
+      // request ที่ผ่าน network-first ต้องถูกเก็บลง cache ด้วย
+      await sleep(100);
+      const cached = (await caches.open('lab-v1').then((c) => c.keys())).some((r) => r.url.includes('probe='));
+      expect(cached ? 'ok' : 'fetch handler ยังไม่ได้เก็บ response ลง cache').toBe('ok');
+    });
+  </script>
+</body>
+</html>

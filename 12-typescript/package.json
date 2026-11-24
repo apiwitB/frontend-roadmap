@@ -1,0 +1,14 @@
+{
+  "name": "ts-exercise",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsc --noEmit && node exercise.ts",
+    "solution": "tsc --noEmit -p tsconfig.solution.json && node solution/exercise.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "~5.9.3"
+  }
+}

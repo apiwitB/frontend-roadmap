@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>09 CSS Architecture</title>
+
+  <!-- ✏️ เขียน CSS ทั้งหมดที่นี่ -->
+  <style id="student">
+    /* ข้อ 4: ประกาศลำดับ layer ก่อน:  @layer reset, base, components, utilities;  */
+
+    /* ข้อ 2: design tokens ใน :root  ต้องมีอย่างน้อย:
+         --color-primary  --color-bg  --color-text  --color-surface  --space-md  --radius          */
+
+    /* ข้อ 3: [data-theme="dark"] เขียนค่า --color-bg, --color-text, --color-surface ใหม่ */
+
+    /* base: body ใช้ background: var(--color-bg) และ color: var(--color-text) */
+
+    /* components: .card, .card__image, .card__title, .card__body, .card__button,
+                   .card--featured (ขอบเป็น --color-primary), .card__badge (display: inline-block)
+       ⚠️ ให้เขียน .card__badge ด้วย selector  .card .card__badge  (specificity สูงกว่า .u-hidden) */
+
+    /* utilities: .u-hidden { display: none; } */
+  </style>
+</head>
+<body>
+  <header>
+    <h1>สินค้าแนะนำ</h1>
+    <!-- ข้อ 3: ปุ่มนี้ต้องสลับ <html data-theme="light|dark"> และตั้ง aria-pressed ให้ตรงกับสถานะ -->
+    <button id="theme-toggle" type="button" aria-pressed="false">🌙 Dark mode</button>
+  </header>
+
+  <main class="grid">
+    <!-- ข้อ 1: ใส่ class แบบ BEM ให้ทุก element ใน card ทั้ง 2 ใบ -->
+    <article>
+      <img src="https://picsum.photos/seed/kb/400/220" alt="คีย์บอร์ด" width="400" height="220">
+      <h2>Mechanical Keyboard</h2>
+      <p>สวิตช์เงียบ พิมพ์สบาย เหมาะกับนักพัฒนา</p>
+      <button type="button">ใส่ตะกร้า</button>
+    </article>
+
+    <!-- card ใบนี้เป็นแบบ featured และมี badge (span) -->
+    <article>
+      <span>ขายดี</span>
+      <img src="https://picsum.photos/seed/mouse/400/220" alt="เมาส์" width="400" height="220">
+      <h2>Ergonomic Mouse</h2>
+      <p>จับถนัดมือ ลดอาการปวดข้อมือ</p>
+      <button type="button">ใส่ตะกร้า</button>
+    </article>
+  </main>
+
+  <!-- badge ที่ต้องซ่อนด้วย utility class (ใส่ class "card__badge u-hidden" ไว้ให้แล้ว) -->
+  <div class="card" id="layer-test">
+    <span class="card__badge u-hidden">ฉันต้องถูกซ่อน</span>
+  </div>
+
+  <script>
+    // ✏️ ข้อ 3: เขียน theme toggle ที่นี่
+    // TODO
+  </script>
+
+  <script src="../_shared/test-runner.js"></script>
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => [...document.querySelectorAll(s)];
+    const root = document.documentElement;
+    const css = (el, p) => getComputedStyle(el).getPropertyValue(p).trim();
+    const cards = () => $$('main article');
+
+    test('ข้อ 1: article ทั้ง 2 ใบมี class "card"', () => expect(cards().every((c) => c.classList.contains('card'))).toBe(true));
+    test('ข้อ 1: ทุก card มี __image, __title, __body, __button', () => {
+      cards().forEach((c) => {
+        expect(c.querySelector('img')?.classList.contains('card__image')).toBe(true);
+        expect(c.querySelector('h2')?.classList.contains('card__title')).toBe(true);
+        expect(c.querySelector('p')?.classList.contains('card__body')).toBe(true);
+        expect(c.querySelector('button')?.classList.contains('card__button')).toBe(true);
+      });
+    });
+    test('ข้อ 1: card ใบที่ 2 มี modifier card--featured (ใบแรกไม่มี)', () => {
+      expect(cards().map((c) => c.classList.contains('card--featured'))).toEqual([false, true]);
+    });
+    test('ข้อ 1: badge มี class card__badge', () => expect(cards()[1].querySelector('span')?.classList.contains('card__badge')).toBe(true));
+    test('ข้อ 1: ไม่มีชื่อ class ที่ซ้อน element (เช่น a__b__c)', () => {
+      const bad = $$('[class]').flatMap((e) => [...e.classList]).filter((c) => /__.+__/.test(c));
+      expect(bad).toEqual([]);
+    });
+    test('ข้อ 2: มี tokens ครบใน :root', () => {
+      const missing = ['--color-primary', '--color-bg', '--color-text', '--color-surface', '--space-md', '--radius'].filter((t) => !css(root, t));
+      expect(missing).toEqual([]);
+    });
+    test('ข้อ 2: ปุ่มใช้ var(--color-primary) จริง (เปลี่ยน token แล้วปุ่มเปลี่ยนตาม)', () => {
+      const btn = $('main .card__button');
+      root.style.setProperty('--color-primary', 'rgb(1, 2, 3)');
+      const bg = getComputedStyle(btn).backgroundColor;
+      root.style.removeProperty('--color-primary');
+      expect(bg).toBe('rgb(1, 2, 3)');
+    });
+    test('ข้อ 2: card--featured ใช้ขอบสี --color-primary', () => {
+      root.style.setProperty('--color-primary', 'rgb(9, 8, 7)');
+      const b = getComputedStyle($('.card--featured')).borderTopColor;
+      root.style.removeProperty('--color-primary');
+      expect(b).toBe('rgb(9, 8, 7)');
+    });
+    test('ข้อ 2: card ใช้ --radius', () => {
+      root.style.setProperty('--radius', '33px');
+      const r = getComputedStyle($('main .card')).borderTopLeftRadius;
+      root.style.removeProperty('--radius');
+      expect(r).toBe('33px');
+    });
+    test('ข้อ 3: dark theme เปลี่ยนสีพื้นหลังของ body', () => {
+      root.dataset.theme = 'light';
+      const before = getComputedStyle(document.body).backgroundColor;
+      root.dataset.theme = 'dark';
+      const after = getComputedStyle(document.body).backgroundColor;
+      root.dataset.theme = 'light';
+      expect(before !== after ? 'ok' : 'สีพื้นหลังเหมือนเดิม (ถ้าใส่ transition ไว้ที่ body ให้เอาออกก่อน เพราะ test จะวัดได้สีระหว่างเปลี่ยน)').toBe('ok');
+    });
+    test('ข้อ 3: ปุ่ม toggle สลับ data-theme และ aria-pressed', () => {
+      root.dataset.theme = 'light';
+      const btn = $('#theme-toggle');
+      btn.click();
+      const a = [root.dataset.theme, btn.getAttribute('aria-pressed')];
+      btn.click();
+      const b = [root.dataset.theme, btn.getAttribute('aria-pressed')];
+      expect([a, b]).toEqual([['dark', 'true'], ['light', 'false']]);
+    });
+    test('ข้อ 4: ประกาศ @layer reset, base, components, utilities', () => {
+      const sheet = $('#student').sheet;
+      const stmt = [...sheet.cssRules].find((r) => r instanceof CSSLayerStatementRule);
+      expect(stmt?.nameList).toEqual(['reset', 'base', 'components', 'utilities']);
+    });
+    test('ข้อ 4: .u-hidden ชนะ .card .card__badge (เพราะอยู่ layer หลังกว่า)', () => {
+      expect(getComputedStyle($('#layer-test .card__badge')).display).toBe('none');
+      const featuredBadge = $('.card--featured .card__badge');
+      expect(featuredBadge && getComputedStyle(featuredBadge).display).not.toBe('none'); // badge ปกติต้องยังแสดงอยู่
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Event Playground</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    @media (max-width: 700px) { body { grid-template-columns: 1fr; } }
+    .box { border: 2px solid; border-radius: 10px; padding: 18px; }
+    #outer { border-color: #ef4444; background: #fef2f2; }
+    #middle { border-color: #f59e0b; background: #fffbeb; }
+    #inner { border-color: #10b981; background: #ecfdf5; cursor: pointer; }
+    .flash { animation: flash .5s; }
+    @keyframes flash { from { box-shadow: 0 0 0 6px #6366f1; } }
+    ol { font-family: ui-monospace, monospace; font-size: 14px; background: #0f172a; color: #e2e8f0; padding: 16px 16px 16px 40px; border-radius: 8px; min-height: 200px; }
+    label { display: block; margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>Event Playground</h1>
+    <p>คลิกกล่องสีเขียว แล้วดูว่า event วิ่งผ่าน element ไหนบ้าง ตามลำดับอะไร</p>
+    <div class="box" id="outer">outer
+      <div class="box" id="middle">middle
+        <div class="box" id="inner">inner (คลิกที่นี่)</div>
+      </div>
+    </div>
+    <h3>ลองสลับดู</h3>
+    <label><input type="checkbox" id="opt-capture" checked> ติด listener ช่วง capture ด้วย</label>
+    <label><input type="checkbox" id="opt-stop"> เรียก <code>e.stopPropagation()</code> ที่ middle (ตอน bubble)</label>
+    <p>
+      <a href="https://example.com" id="link">ลิงก์นี้ถูก preventDefault()</a> คลิกแล้วไม่เปลี่ยนหน้า
+    </p>
+  </div>
+
+  <div>
+    <h2>Log <button id="clear">ล้าง</button></h2>
+    <ol id="log"></ol>
+  </div>
+
+  <script>
+    const log = document.getElementById('log');
+    const write = (text) => {
+      const li = document.createElement('li');
+      li.textContent = text;
+      log.append(li);
+    };
+
+    ['outer', 'middle', 'inner'].forEach((id) => {
+      const el = document.getElementById(id);
+
+      el.addEventListener('click', (e) => {
+        if (!document.getElementById('opt-capture').checked) return;
+        write(`⬇ CAPTURE  ${id.padEnd(6)}  target=${e.target.id} currentTarget=${e.currentTarget.id}`);
+      }, { capture: true });
+
+      el.addEventListener('click', (e) => {
+        write(`⬆ BUBBLE   ${id.padEnd(6)}  target=${e.target.id} currentTarget=${e.currentTarget.id}`);
+        el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+        if (id === 'middle' && document.getElementById('opt-stop').checked) {
+          e.stopPropagation();
+          write('   ✋ stopPropagation(): outer จะไม่ได้รับ event ตอน bubble');
+        }
+      });
+    });
+
+    document.getElementById('link').addEventListener('click', (e) => {
+      e.preventDefault();
+      write('🔗 link: preventDefault() → ไม่เปลี่ยนหน้า (แต่ event ยัง bubble ต่อได้)');
+    });
+
+    document.getElementById('clear').addEventListener('click', () => log.replaceChildren());
+  </script>
+</body>
+</html>

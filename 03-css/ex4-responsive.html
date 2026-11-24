@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>03-4 Responsive</title>
+
+  <!-- 🔒 ห้ามแก้ -->
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 0; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #0f172a; color: white; }
+    .nav-links { list-style: none; margin: 0; padding: 0; gap: 16px; }
+    .nav-links a { color: #e2e8f0; }
+    .menu-btn { font-size: 20px; background: none; color: white; border: 1px solid #475569; border-radius: 6px; padding: 4px 10px; }
+    .hero { padding: 24px 16px; }
+    .hero h1 { margin: 0 0 12px; }
+    .wrap { padding: 16px; }
+    .card { background: #f1f5f9; border-radius: 8px; padding: 16px; min-height: 80px; }
+  </style>
+
+  <!-- ✏️ เขียนคำตอบที่นี่ แบบ MOBILE-FIRST (ใช้ min-width เท่านั้น ห้ามใช้ max-width ใน media query) -->
+  <style id="student">
+    /* ──── มือถือ (ค่าเริ่มต้น ไม่ต้องอยู่ใน media query) ────
+       1) .cards เป็น grid 1 คอลัมน์ ห่างกัน 16px
+       2) .nav-links ซ่อน  /  .menu-btn แสดง
+       3) รูปใน .hero ต้องไม่ล้นจอ (ตอนนี้รูปกว้าง 900px!)
+       4) h1 ใช้ font-size: clamp(...) ให้ตัวใหญ่ขึ้นตามความกว้างจอ */
+
+    /* ──── แท็บเล็ต ≥ 768px ────
+       .cards 2 คอลัมน์, .nav-links แสดงเป็น flex, .menu-btn ซ่อน */
+
+    /* ──── เดสก์ท็อป ≥ 1024px ────
+       .cards 3 คอลัมน์ */
+
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <strong>Responsive</strong>
+    <ul class="nav-links">
+      <li><a href="#">หน้าแรก</a></li>
+      <li><a href="#">สินค้า</a></li>
+      <li><a href="#">ติดต่อ</a></li>
+    </ul>
+    <button class="menu-btn" aria-label="เปิดเมนู">☰</button>
+  </header>
+
+  <section class="hero">
+    <h1>ออกแบบครั้งเดียว ใช้ได้ทุกจอ</h1>
+    <img src="https://picsum.photos/seed/hero/900/300" width="900" height="300" alt="ภาพประกอบ">
+  </section>
+
+  <main class="wrap">
+    <div class="cards">
+      <div class="card">1</div><div class="card">2</div><div class="card">3</div>
+      <div class="card">4</div><div class="card">5</div><div class="card">6</div>
+    </div>
+  </main>
+
+  <script src="../_shared/test-runner.js"></script>
+  <script>
+    // test โหลดหน้านี้ใน iframe 3 ขนาด แล้ววัดผล (iframe จะเห็น media query ตามความกว้างของตัวมันเอง)
+    const frames = {};
+    const at = async (w) => (frames[w] ||= loadInFrame(w)).then((f) => f.contentDocument);
+    const columns = (doc) => {
+      const tops = [...doc.querySelectorAll('.card')].map((c) => Math.round(c.getBoundingClientRect().top));
+      return tops.filter((t) => t === tops[0]).length;
+    };
+    const visible = (doc, s) => doc.defaultView.getComputedStyle(doc.querySelector(s)).display !== 'none';
+    const css = document.getElementById('student').textContent.replace(/\/\*[\s\S]*?\*\//g, '');
+
+    test('375px: การ์ด 1 คอลัมน์', async () => expect(columns(await at(375))).toBe(1));
+    test('800px: การ์ด 2 คอลัมน์', async () => expect(columns(await at(800))).toBe(2));
+    test('1200px: การ์ด 3 คอลัมน์', async () => expect(columns(await at(1200))).toBe(3));
+    test('การ์ดห่างกัน 16px', async () => {
+      const d = await at(800);
+      const [a, b] = d.querySelectorAll('.card');
+      expect(Math.round(b.getBoundingClientRect().left - a.getBoundingClientRect().right)).toBe(16);
+    });
+    test('375px: ซ่อน .nav-links, แสดง .menu-btn', async () => {
+      const d = await at(375);
+      expect([visible(d, '.nav-links'), visible(d, '.menu-btn')]).toEqual([false, true]);
+    });
+    test('800px: แสดง .nav-links (flex), ซ่อน .menu-btn', async () => {
+      const d = await at(800);
+      expect(d.defaultView.getComputedStyle(d.querySelector('.nav-links')).display).toBe('flex');
+      expect(visible(d, '.menu-btn')).toBe(false);
+    });
+    test('375px: ไม่มี horizontal scroll (รูปไม่ล้นจอ)', async () => {
+      const d = await at(375);
+      expect(d.documentElement.scrollWidth <= 375 ? 'ok' : `หน้ากว้าง ${d.documentElement.scrollWidth}px`).toBe('ok');
+    });
+    test('รูปยังคงสัดส่วน (ไม่บี้)', async () => {
+      const img = (await at(375)).querySelector('.hero img').getBoundingClientRect();
+      expect(Math.abs(img.width / img.height - 3) < 0.05 ? 'ok' : 'สัดส่วนเพี้ยน ลองใส่ height: auto').toBe('ok');
+    });
+    test('h1 ใช้ clamp() และใหญ่ขึ้นบนจอกว้าง', async () => {
+      expect(css.includes('clamp(')).toBe(true);
+      const fs = async (w) => parseFloat((await at(w)).defaultView.getComputedStyle((await at(w)).querySelector('h1')).fontSize);
+      expect((await fs(1200)) > (await fs(375))).toBe(true);
+    });
+    test('mobile-first: ใช้ min-width และไม่ใช้ max-width ใน @media', () => {
+      expect(/@media[^{]*min-width/.test(css)).toBe(true);
+      expect(/@media[^{]*max-width/.test(css)).toBe(false);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- เฉลย 02-2 : คัดลอกส่วน <form> ไปแทนในไฟล์แบบฝึกหัดเพื่อรัน test ได้ -->
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>สมัครสมาชิก (เฉลย)</title>
+</head>
+<body>
+  <h1>สมัครสมาชิก</h1>
+
+  <form id="register" action="#" method="post">
+    <!-- แบบที่ 1: label for="id" -->
+    <label for="name">ชื่อ-นามสกุล</label>
+    <input id="name" name="name" required autocomplete="name">
+
+    <label for="email">อีเมล</label>
+    <input id="email" name="email" type="email" required autocomplete="email">
+
+    <label for="password">รหัสผ่าน (อย่างน้อย 8 ตัว)</label>
+    <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password">
+
+    <!-- แบบที่ 2: เอา label ครอบ input ไว้ ไม่ต้องใช้ id -->
+    <label>เบอร์มือถือ (ไม่บังคับ)
+      <input name="phone" type="tel" pattern="0[0-9]{9}" inputmode="numeric" autocomplete="tel" placeholder="08xxxxxxxx">
+    </label>
+
+    <label>อายุ
+      <input name="age" type="number" required min="13" max="120">
+    </label>
+
+    <fieldset>
+      <legend>แพ็กเกจ</legend>
+      <label><input type="radio" name="plan" value="free" checked> Free</label>
+      <label><input type="radio" name="plan" value="pro"> Pro</label>
+      <label><input type="radio" name="plan" value="team"> Team</label>
+    </fieldset>
+
+    <label class="inline"><input type="checkbox" name="terms" required> ฉันยอมรับเงื่อนไขการใช้งาน</label>
+
+    <button type="submit">สมัครสมาชิก</button>
+  </form>
+</body>
+</html>
